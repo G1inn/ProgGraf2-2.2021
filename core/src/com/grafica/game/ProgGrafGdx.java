@@ -4,53 +4,64 @@ import com.badlogic.gdx.ApplicationAdapter;
 import com.badlogic.gdx.Gdx;
 import com.badlogic.gdx.Input;
 import com.badlogic.gdx.graphics.OrthographicCamera;
-import com.badlogic.gdx.graphics.Texture;
-import com.badlogic.gdx.graphics.g2d.SpriteBatch;
+import com.badlogic.gdx.math.Vector2;
+import com.badlogic.gdx.utils.Array;
 import com.badlogic.gdx.utils.ScreenUtils;
-import com.badlogic.gdx.math.Rectangle;
 
 public class ProgGrafGdx extends ApplicationAdapter {
 	private OrthographicCamera camera;
-	SpriteBatch batch;
-	Texture img;
-	private Rectangle bucket;
+
+	Vibora vibora; Comida comida; Scoreboard scoreboard;
+
+	Nivel nivel = new Nivel();
 
 	@Override
 	public void create () {
 		camera = new OrthographicCamera();
-		camera.setToOrtho(false, 800, 480);
+		camera.setToOrtho(false, 500, 500);
 
-		batch = new SpriteBatch();
-		img = new Texture("download.png");
+		scoreboard = new Scoreboard();
 
-		bucket = new Rectangle();
-		bucket.x = 800 / 2 - 64 / 2;
-		bucket.y = 20;
-		bucket.width = 64;
-		bucket.height = 64;
+		nivel.CrearBatch(); nivel.CargarNivel(scoreboard.nivel);
+
+		vibora = new Vibora();
+
+		comida = new Comida();
 	}
 
 	@Override
 	public void render () {
+		ScreenUtils.clear(1, 1, 1, 1);
 		camera.update();
-		batch.setProjectionMatrix(camera.combined);
+		vibora.batchVibora.setProjectionMatrix(camera.combined);
+		comida.batchComida.setProjectionMatrix(camera.combined);
 
-		ScreenUtils.clear(0, 1, 0, 1);
-		batch.begin();
-		batch.draw(img, bucket.x, bucket.y);
-		batch.end();
+		nivel.dibujarNivel();
 
-		if(Gdx.input.isKeyPressed(Input.Keys.LEFT)) bucket.x -= 200 * Gdx.graphics.getDeltaTime();
-		if(Gdx.input.isKeyPressed(Input.Keys.RIGHT)) bucket.x += 200 * Gdx.graphics.getDeltaTime();
-		if(Gdx.input.isKeyPressed(Input.Keys.DOWN)) bucket.y -= 200 * Gdx.graphics.getDeltaTime();
-		if(Gdx.input.isKeyPressed(Input.Keys.UP)) bucket.y += 200 * Gdx.graphics.getDeltaTime();
-		if(bucket.x < 0) bucket.x = 0;
-		if(bucket.x > 800 - 64) bucket.x = 800 - 64;
+		vibora.DibujarVibora();
+
+		comida.dibujarComida();
+
+		scoreboard.MostrarScoreboard();
+
+		if ((scoreboard.vidas == 0)){
+			dispose();
+		}
+		if ((scoreboard.puntos == 5 && scoreboard.nivel == 1)){
+			dispose();
+		}
+		vibora.update(Gdx.graphics.getDeltaTime(), nivel);
+		vibora.input();
+		vibora.colisionCola(comida, scoreboard);
+		vibora.comioComida(comida, scoreboard, nivel);
+		vibora.colisionMuro(nivel, comida, scoreboard);
 	}
 	
 	@Override
 	public void dispose () {
-		batch.dispose();
-		img.dispose();
+		//batch.dispose();
+		vibora.batchVibora.dispose();
+		//cabeza.dispose();
+		comida.comida.dispose();
 	}
 }
